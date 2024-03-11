@@ -1,15 +1,16 @@
 import React from "react"
 import {Avatar, List} from "antd"
-import {useGetAllCoursesQuery} from "./courseApi"
+import {useGetCourseByTeacherIdQuery} from "./courseApi"
 import LoadingBlock from "../../components/LoadingBlock"
 import {useNavigate} from "react-router-dom"
+import {useGetMeQuery} from "../auth/authApi"
 
 interface CourseProps {
-
 }
 
 const Course: React.FC<CourseProps> = ({}) => {
-    const {data, isSuccess, isLoading} = useGetAllCoursesQuery()
+    const {data: me} = useGetMeQuery()
+    const {data, isSuccess, isLoading} = useGetCourseByTeacherIdQuery(me?.data.id, {skip: !me?.data.id})
     const navigate = useNavigate()
 
     const onCourseClick = (id: string) => {

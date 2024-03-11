@@ -1,6 +1,6 @@
 import {createApi} from "@reduxjs/toolkit/query/react"
 import {apiConfig} from "../../utils/api-config"
-import {Student} from "../../types/Student"
+import {TeacherResponse} from "../../types/Teacher"
 
 export const authApi = createApi({
     reducerPath: "authApi",
@@ -10,25 +10,18 @@ export const authApi = createApi({
         login: build.mutation<{
             token: string
         }, {
-            student_card_number: string,
+            username: string,
             password: string
         }>({
             query: (data) => ({
-                url: "/login/student",
+                url: "/login/teacher",
                 method: "POST",
                 body: data
             })
         }),
-        getMe: build.query<{
-            status: boolean
-            message: {
-                ru: string
-                uz: string
-            }
-            data: Student
-        }, void>({
+        getMe: build.query<TeacherResponse, void>({
             query: () => ({
-                url: "/student/me",
+                url: "/teacher/me",
                 method: "GET"
             })
         })

@@ -45,6 +45,25 @@ export const homeworkApi = createApi({
                 method: "DELETE"
             }),
             invalidatesTags: ["homework"]
+        }),
+        updateHomework: build.mutation<{
+            status: boolean
+            message: {
+                ru: string
+                uz: string
+            }
+            data: []
+        }, {
+            id: string
+            mark: number
+            status: string
+        }>({
+            query: (data) => ({
+                url: `/homework-files/${data.id}/mark`,
+                method: "PUT",
+                body: data
+            }),
+            invalidatesTags: ["homework"]
         })
     })
 })
@@ -52,5 +71,6 @@ export const homeworkApi = createApi({
 export const {
     useGetHomeworksByCourseIdQuery,
     useCreateHomeworkMutation,
-    useDeleteHomeworkMutation
+    useDeleteHomeworkMutation,
+    useUpdateHomeworkMutation
 } = homeworkApi

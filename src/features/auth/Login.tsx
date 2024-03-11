@@ -24,13 +24,13 @@ const Login: React.FC<LoginProps> = ({}) => {
     }, [token])
 
     const onSubmitHandler = (values: {
-        student_card_number: string,
+        username: string,
         password: string
     }) => {
-        if (values.student_card_number && values.password) {
+        if (values.username && values.password) {
             login({
                 password: values.password,
-                student_card_number: values.student_card_number
+                username: values.username
             })
         }
     }
@@ -68,14 +68,14 @@ const Login: React.FC<LoginProps> = ({}) => {
                 onFinish={onSubmitHandler}
             >
                 <Form.Item
-                    label={"Номер студенческого билета"}
-                    name="student_card_number"
-                    rules={[{required: true, message: "Пожалуйста, введите номер студенческого билета!"}]}
+                    label={"Логин"}
+                    name="username"
+                    rules={[{required: true, message: "Пожалуйста, введите ваш логин!"}]}
                 >
                     <Input
                         size={"large"}
                         prefix={<UserOutlined className="site-form-item-icon"/>}
-                        placeholder="Введите номер студенческого билета"/>
+                        placeholder="Введите ваш логин"/>
                 </Form.Item>
                 <Form.Item
                     label={"Пароль"}

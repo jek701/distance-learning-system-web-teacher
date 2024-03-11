@@ -16,7 +16,7 @@ export interface HomeworkFile {
     student_id: string
     group_id: string
     course_id: string
-    status: "pending" | "accepted" | "rejected"
+    status: "pending" | "accepted" | "declined"
     mark: number
     student: Student
     created_at: string

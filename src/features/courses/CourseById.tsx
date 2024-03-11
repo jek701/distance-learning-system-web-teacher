@@ -1,17 +1,15 @@
-import React from "react"
+import React, {useEffect} from "react"
 import {useParams} from "react-router-dom"
 import {useGetCourseQuery} from "./courseApi"
 import LoadingBlock from "../../components/LoadingBlock"
-import {Button, Card, List, notification, Popconfirm, Tag, Upload, UploadProps} from "antd"
+import {Button, Card, Form, Input, List, Modal, notification, Select, Tag, Upload, UploadProps} from "antd"
 import Title from "antd/es/typography/Title"
 import {
-    useCreateHomeworkMutation,
-    useDeleteHomeworkMutation,
-    useGetHomeworksByCourseIdQuery
+    useGetHomeworksByCourseIdQuery, useUpdateHomeworkMutation
 } from "../homeworks/homeworkApi"
 import {createUseStyles} from "react-jss"
 import moment from "moment"
-import {DeleteOutlined} from "@ant-design/icons"
+import {useCreateManualMutation, useDeleteManualMutation} from "../courses/courseApi"
 
 interface CourseByIdProps {
 
@@ -30,12 +28,16 @@ const CourseById: React.FC<CourseByIdProps> = ({}) => {
     const {id} = params
     const courseId = id as string
     const {data, isLoading, isSuccess} = useGetCourseQuery(courseId, {skip: !id})
+    const [form] = Form.useForm()
+    const [openModal, setOpenModal] = React.useState(false)
+    const [homeworkId, setHomeworkId] = React.useState("")
+    const [updateHomework, {isSuccess: isHomeworkUpdated, isError: isHomeworkUpdateError, data: homeworkUpdateData}] = useUpdateHomeworkMutation()
     const {
         data: homeworkData,
         isSuccess: homeworkSuccess
     } = useGetHomeworksByCourseIdQuery(courseId, {skip: !id})
-    const [uploadHomework] = useCreateHomeworkMutation()
-    const [deleteHomework] = useDeleteHomeworkMutation()
+    const [uploadManual] = useCreateManualMutation()
+    const [deleteManual] = useDeleteManualMutation()
 
     const uploadProps: UploadProps = {
         defaultFileList: data?.data.manual_files.map(file => ({
@@ -43,32 +45,65 @@ const CourseById: React.FC<CourseByIdProps> = ({}) => {
             name: file.file_name,
             status: "done",
             url: file.file_path
-        }))
+        })),
+        onRemove: async (file) => {
+            await deleteManual(file.uid).unwrap().then((res) => {
+                if (res.status) {
+                    notification.success({
+                        message: res.message.ru
+                    })
+                } else {
+                    notification.error({
+                        message: res.message.ru
+                    })
+                }
+            })
+        }
     }
 
+    const onFinish = (values: {
+        mark: number,
+        status: "accepted" | "rejected" | "pending"
+    }) => {
+        updateHomework({
+            id: homeworkId,
+            mark: values.mark,
+            status: values.status
+        })
+    }
+
+    useEffect(() => {
+        if (isHomeworkUpdated) {
+            notification.success({
+                message: "Успешно",
+                description: homeworkUpdateData?.message.ru
+            })
+            setOpenModal(false)
+        }
+        if (isHomeworkUpdateError) {
+            notification.error({
+                message: "Ошибка",
+                description: homeworkUpdateData?.message.ru
+            })
+        }
+    }, [isHomeworkUpdated, isHomeworkUpdateError])
 
     if (isLoading) {
         return <LoadingBlock/>
     }
 
     if (isSuccess && data) {
-        return (
+        return <>
             <div>
                 <Title level={1}>{data.data.title} {data.data.title_short && `(${data.data.title_short})`}</Title>
-                {data.data.manual_files && <Card title={"Методички"}>
-                    <Upload {...uploadProps} />
-                </Card>}
-                <br/>
-                {homeworkSuccess && homeworkData && <Card bordered extra={
+                {data.data.manual_files && <Card title={"Методички"} extra={
                     <Upload
                         showUploadList={false}
                         customRequest={async ({file}) => {
-                            const formData = new FormData()
-                            // Filename can be in cyrillic
-                            formData.append("file", file)
-                            formData.append("course_id", courseId)
-                            // @ts-ignore
-                            await uploadHomework(formData).unwrap().then((res) => {
+                            await uploadManual({
+                                course_id: courseId,
+                                file
+                            }).unwrap().then((res) => {
                                 if (res.status) {
                                     notification.success({
                                         message: res.message.ru
@@ -83,7 +118,11 @@ const CourseById: React.FC<CourseByIdProps> = ({}) => {
                     >
                         <Button>Загрузить</Button>
                     </Upload>
-                } title={"Домашние задания"}>
+                }>
+                    <Upload {...uploadProps} />
+                </Card>}
+                <br/>
+                {homeworkSuccess && homeworkData && <Card bordered title={"Домашние задания"}>
                     <List
                         size={"small"}
                         itemLayout="horizontal"
@@ -98,34 +137,25 @@ const CourseById: React.FC<CourseByIdProps> = ({}) => {
                                             <p>Дата загрузки: {moment(item.created_at).format("DD.MM.YYYY - HH:mm")}</p>
                                             <p>Статус: <Tag color={
                                                 item.status === "accepted" ? "green" :
-                                                    item.status === "rejected" ? "red" : "yellow"
+                                                    item.status === "declined" ? "red" : "yellow"
                                             }>{item.status}</Tag></p>
                                             {item.status === "accepted" && <>
                                                 <p>Дата
                                                     проверки: {moment(item.updated_at).format("DD.MM.YYYY - HH:mm")}</p>
                                                 <p>Оценка: {item.mark}</p>
                                             </>}
-                                        </div>
-                                        {item.status !== "accepted" && <div>
-                                            <Button>
-                                                <Popconfirm title={"Вы уверены?"} onConfirm={() => {
-                                                    deleteHomework(item.id).unwrap().then((res) => {
-                                                            if (res.status) {
-                                                                notification.success({
-                                                                    message: res.message.ru
-                                                                })
-                                                            } else {
-                                                                notification.error({
-                                                                    message: res.message.ru
-                                                                })
-                                                            }
-                                                        }
-                                                    )
-                                                }}>
-                                                    <DeleteOutlined/>
-                                                </Popconfirm>
+                                            <br/>
+                                            <Button onClick={() => {
+                                                setOpenModal(true)
+                                                setHomeworkId(item.id)
+                                                form.setFieldsValue({
+                                                    mark: item.mark || 0,
+                                                    status: item.status
+                                                })
+                                            }} type={"dashed"} block>
+                                                Оценить
                                             </Button>
-                                        </div>}
+                                        </div>
                                     </div>}
                                 />
                             </List.Item>
@@ -133,7 +163,39 @@ const CourseById: React.FC<CourseByIdProps> = ({}) => {
                     />
                 </Card>}
             </div>
-        )
+            <Modal
+                title={"Оценка"}
+                open={openModal}
+                onCancel={() => setOpenModal(false)}
+                okButtonProps={{
+                    form: "homework-form",
+                    htmlType: "submit"
+                }}
+            >
+                <Form
+                    id={"homework-form"}
+                    form={form}
+                    onFinish={onFinish}
+                >
+                    <Form.Item
+                        label={"Оценка"}
+                        name={"mark"}
+                    >
+                        <Input type={"number"} min={0} max={10}/>
+                    </Form.Item>
+                    <Form.Item
+                        label={"Статус"}
+                        name={"status"}
+                    >
+                        <Select>
+                            <Select.Option value={"accepted"}>Принято</Select.Option>
+                            <Select.Option value={"declined"}>Отклонено</Select.Option>
+                            <Select.Option value={"uploaded"}>На проверке</Select.Option>
+                        </Select>
+                    </Form.Item>
+                </Form>
+            </Modal>
+        </>
     }
 
     return <div>Not found</div>

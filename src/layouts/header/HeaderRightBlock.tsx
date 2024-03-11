@@ -5,6 +5,7 @@ import {createUseStyles} from "react-jss"
 import {useGetMeQuery} from "../../features/auth/authApi"
 import {removeToken} from "../../utils/token"
 import {useNavigate} from "react-router-dom"
+import {useGetDepartmentsQuery} from "../../features/department/departmentApi"
 
 
 const useStyles = createUseStyles({
@@ -24,6 +25,7 @@ interface HeaderRightBlockProps {
 const HeaderRightBlock: React.FC<HeaderRightBlockProps> = ({extra}) => {
     const classes = useStyles()
     const {data, isSuccess} = useGetMeQuery()
+    const {data: departments} = useGetDepartmentsQuery()
     const navigate = useNavigate()
 
     // Выйти из системы
@@ -46,13 +48,8 @@ const HeaderRightBlock: React.FC<HeaderRightBlockProps> = ({extra}) => {
             disabled: true
         },
         {
-            label: <>Номер группы: {data?.data.group_number}</>,
+            label: <>Кафедра: {departments?.data.find(department => department.id === data?.data.department_id)?.title}</>,
             key: "group_number",
-            disabled: true
-        },
-        {
-            label: `Рейтинг: ${data?.data.rating || 0}`,
-            key: "rating",
             disabled: true
         },
         {

@@ -6,6 +6,8 @@ import {courseApi} from "./features/courses/courseApi"
 import {homeworkApi} from "./features/homeworks/homeworkApi"
 import {studentsApi} from "./features/students/studentsApi"
 import {groupApi} from "./features/group/groupApi"
+import {departmentApi} from "./features/department/departmentApi"
+import {manualApi} from "./features/manuals/manualApi"
 
 const reducers = {
     [authApi.reducerPath]: authApi.reducer,
@@ -13,6 +15,8 @@ const reducers = {
     [homeworkApi.reducerPath]: homeworkApi.reducer,
     [studentsApi.reducerPath]: studentsApi.reducer,
     [groupApi.reducerPath]: groupApi.reducer,
+    [departmentApi.reducerPath]: departmentApi.reducer,
+    [manualApi.reducerPath]: manualApi.reducer,
     auth: authSlice
 }
 
@@ -24,6 +28,8 @@ const store = configureStore({
         .concat(homeworkApi.middleware)
         .concat(studentsApi.middleware)
         .concat(groupApi.middleware)
+        .concat(departmentApi.middleware)
+        .concat(manualApi.middleware)
 })
 
 export type StoreState = ReturnType<typeof store.getState>
