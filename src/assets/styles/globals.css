@@ -1,0 +1,14 @@
+* {
+    font-family: "Averta CY", -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell,
+    Fira Sans, Droid Sans, Helvetica Neue, sans-serif !important;
+}
+
+.discussion_block .ant-upload-list-item-container {
+    margin: 0 10px 0 0 !important;
+    width: 80px !important;
+    height: 80px !important;
+}
+
+p {
+    margin: 0;
+}
